@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Firebase Authentication 第三方登入 - Google、FB - Augustus - Let's Write</title>
+  <link rel="canonical" href="https://letswrite.tw/firebase-auth-google-fb/" />
+  <meta property="og:url" content="https://letswritetw.github.io/letswrite-firebase-auth-google-fb/" />
+  <meta property="fb:app_id" content="911000986339138" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Let's Write" />
+  <meta property="og:title" content="Firebase Authentication 第三方登入 - Google、FB - Augustus - Let's Write" />
+  <meta itemprop="name" content="Firebase Authentication 第三方登入 - Google、FB - Augustus - Let's Write" />
+  <meta name="description"
+    content="本篇大綱：本篇要解決的問題。建立 Firebase 專案、應用程式。Google：開通 Authentication 功能。Google 登入。Facebook：應用程式、ID、密鑰、URL。Facebook 登入。登出、刪除帳號。範例及原始檔。" />
+  <meta property="og:description"
+    content="本篇大綱：本篇要解決的問題。建立 Firebase 專案、應用程式。Google：開通 Authentication 功能。Google 登入。Facebook：應用程式、ID、密鑰、URL。Facebook 登入。登出、刪除帳號。範例及原始檔。" />
+  <meta itemprop="description"
+    content="本篇大綱：本篇要解決的問題。建立 Firebase 專案、應用程式。Google：開通 Authentication 功能。Google 登入。Facebook：應用程式、ID、密鑰、URL。Facebook 登入。登出、刪除帳號。範例及原始檔。" />
+  <meta itemprop="image" content="https://letswritetw.github.io/letswrite-firebase-auth-google-fb/fb.jpg" />
+  <meta property="og:image" content="https://letswritetw.github.io/letswrite-firebase-auth-google-fb/fb.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Firebase Authentication 第三方登入 - Google、FB" />
+  <link rel="shortcut icon" href="https://letswritetw.github.io/letswritetw/dist/img/logo_512.png" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" />
+  <link rel="stylesheet" href="dist/style.min.css" />
+  <!-- Google Tag Manager-->
+  <script>
+    (function (w, d, s, l, i) {
+      w[l] = w[l] || []; w[l].push({
+        'gtm.start':
+          new Date().getTime(), event: 'gtm.js'
+      }); var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-PGQ9WQT');
+  </script>
+</head>
+
+<body>
+  <!-- Google Tag Manager (noscript)-->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PGQ9WQT" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <div class="container" id="app">
+    <h1 class="text-center">Firebase 第三方登入 - Google、FB</h1>
+    <hr />
+    <p class="text-center">筆記文：<a href="" target="_blank">Let's Write</a></p>
+    <blockquote><a href="v9.html">Firebase V9 版本請點此</a></blockquote>
+    <h2>Google</h2>
+    <h3>選擇登入方式</h3>
+    <div>
+      <input id="g-popup" type="radio" name="googleType" value="popup" checked="checked" />
+      <label for="g-popup">Popup</label>
+    </div>
+    <div>
+      <input id="g-redirect" type="radio" name="googleType" value="redirect" />
+      <label for="g-redirect">Redirect</label>
+    </div>
+    <h3>點擊登入</h3>
+    <button id="google" type="button">Google 登入</button>
+    <pre><code id="googleCode">登入完後的資料會出現在這</code></pre>
+    <pre><code id="googleError">有錯誤的話會出現在這</code></pre>
+    <hr />
+    <h2>Facebook</h2>
+    <h3>選擇登入方式</h3>
+    <div>
+      <input id="fb-popup" type="radio" name="fbType" value="popup" checked="checked" />
+      <label for="fb-popup">Popup</label>
+    </div>
+    <div>
+      <input id="fb-redirect" type="radio" name="fbType" value="redirect" />
+      <label for="fb-redirect">Redirect</label>
+    </div>
+    <h3>點擊登入</h3>
+    <button id="fb" type="button">Facebook 登入</button>
+    <pre><code id="fbCode">登入完後的資料會出現在這</code></pre>
+    <pre><code id="fbError">有錯誤的話會出現在這</code></pre>
+    <hr />
+    <section class="d-none" id="out">
+      <h2>登出 / 刪除</h2>
+      <button id="signOut" type="button">登出</button>
+      <button id="deleteUser" type="button">刪除我的帳號</button>
+      <pre><code id="userError">登出、刪除有錯誤的話會出現在這</code></pre>
+      <hr />
+    </section>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-auth.js"></script>
+  <script>
+    var firebaseConfig = {
+      // apiKey: "AIzaSyCFpMDt4vtV96zycNpJTxo73XvA4q9MIZQ",
+      // authDomain: "letswrite-helpful-btn.firebaseapp.com",
+      // databaseURL: "https://letswrite-helpful-btn.firebaseio.com",
+      // projectId: "letswrite-helpful-btn",
+      // storageBucket: "letswrite-helpful-btn.appspot.com",
+      // messagingSenderId: "498690047881",
+      // appId: "1:498690047881:web:dcb559143db6f145e26b58",
+      // measurementId: "G-9YZ3G343K3"
+
+      apiKey: "AIzaSyBHQeVPNoWKvZcFGBUa5VY0BsRupPQefWo",
+      authDomain: "email-login-dc397.firebaseapp.com",
+      projectId: "email-login-dc397",
+      storageBucket: "email-login-dc397.appspot.com",
+      messagingSenderId: "50697291131",
+      appId: "1:50697291131:web:e074712da845865f1ae9de",
+      measurementId: "${config.measurementId}"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+  </script>
+  <script src="dist/main.min.js"></script>
+</body>
+
+</html>
